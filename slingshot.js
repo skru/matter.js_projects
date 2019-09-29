@@ -258,7 +258,7 @@ function removeCar(bodyId){
           setTimeout(function(){ // remove enemies slightly after car (might have to remove)
                 World.remove(engine.world, composite, true) 
                 
-            },250);
+            },500);
           
 
         }
