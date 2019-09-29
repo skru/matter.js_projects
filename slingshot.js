@@ -12,6 +12,10 @@ var Engine = Matter.Engine,
     Bodies = Matter.Bodies,
     Body = Matter.Body;
 
+// canvas size
+canvasWidth = window.innerWidth;
+canvasHeight = window.innerHeight;
+
 // create engine
 var engine = Engine.create(),
     world = engine.world;
@@ -21,9 +25,11 @@ var render = Render.create({
     element: document.body,
     engine: engine,
     options: {
-        width: 1000,
-        height: 600,
-        showAngleIndicator: true
+        width: canvasWidth,
+        height: canvasHeight,
+        background: '#0f0f13',
+        showAngleIndicator: false,
+        wireframes: false
     }
 });
 
@@ -34,13 +40,14 @@ var runner = Runner.create();
 Runner.run(runner, engine);
 
 
-var spawnX = 900,
-    spawnY = 550,
-    spawnRate = 1200, //2000
-    carSpeed = -0.1, //02
-    towerX = 100,
-    carScaleMin = 0.6,
-    carScaleMax = 1.6;
+var spawnX = canvasWidth + 200,
+    spawnY = ((canvasHeight/8) * 7) + 5,
+    spawnRate = 2, //2000
+    carSpeed = -0.4, //02
+    towerX = canvasWidth/8,
+    towerY = (canvasHeight/4) * 3,
+    carScaleMin = 0.4,
+    carScaleMax = 0.8;
 
 // create rocks
 class Rock{
@@ -50,32 +57,43 @@ class Rock{
 }
   
 // create level
-var rock = new Rock(towerX, 450, 20, 12);
-var ground = Bodies.rectangle(0, 600, 2000, 50, { isStatic: true, label: 'ground' })
-var tower = Bodies.rectangle(towerX, 525, 5, 100, { isStatic: true, label: 'tower' })
+var rock = new Rock(towerX, towerY, 20, canvasWidth/128);
+var ground = Bodies.rectangle(0, (canvasHeight/16) * 15, canvasWidth*3, canvasHeight/16, { isStatic: true, label: 'ground' })
+var tower = Bodies.rectangle(towerX, towerY + (canvasHeight/8), 5, (canvasHeight/8), { isStatic: true, label: 'tower' })
 
+// spawn sensor
+
+//  var spawnSensor = Bodies.rectangle(canvasWidth-300, (canvasHeight/16) * 14, 500, 50, {
+//     isSensor: true,
+//     isStatic: true,
+   
+// });
 // create slingshot
-var anchor = { x: towerX, y: 450 },
+var anchor = { x: towerX, y: towerY },
 elastic = Constraint.create({
     pointA: anchor,
     bodyB: rock.body,
     stiffness: 0.05
 });
 
-World.add(engine.world, [ground, tower, rock.body, elastic,]);
+World.add(engine.world, [ground, tower, rock.body, elastic]);
 
 // Create cars
+var collisionCategories = [0x0001, 0x0002]
+
 Composites.enemyCar = function(xx, yy, width, height, wheelSize) {
     var group = Body.nextGroup(true),
-        wheelBase = 20,
+        wheelBase = width*0.75,
         wheelAOffset = -width * 0.5 + wheelBase,
         wheelBOffset = width * 0.5 - wheelBase,
         wheelYOffset = 10;
+        //collisionCategory = collisionCategories[Common.random(0, 1)];
 
     var car = Composite.create({ label: 'Car' }),
         body = Bodies.rectangle(xx, yy, width, height, {
             collisionFilter: {
-                group: group
+                group: group,
+                //category: collisionCategory
             },
             chamfer: {
                 radius: height * 0.2
@@ -86,20 +104,29 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize) {
             label: 'carBody',
         });
 
-    var wheelA = Bodies.circle(xx + wheelAOffset, yy + wheelYOffset, wheelSize, {
+    var wheelA = Bodies.circle(xx + wheelAOffset, yy + wheelYOffset, wheelSize + (wheelSize*Common.random(0,0.5)), {
         collisionFilter: {
-            group: group
+            group: group,
+            //category: collisionCategory
         },
         friction: 1,
-        restitution: 0
+        restitution: 0.001,
+        // render: {
+        //     sprite: {
+        //         texture: 'img/wheel.png',
+        //         xScale: 0.5,
+        //         yScale: 0.5
+        //     }
+        // }
     });
                 
     var wheelB = Bodies.circle(xx + wheelBOffset, yy + wheelYOffset, wheelSize, {
         collisionFilter: {
-            group: group
+            group: group,
+            //category: collisionCategory
         },
         friction: 1,
-        restitution: 0
+        restitution: 0.001
     });
                 
     var axelA = Constraint.create({
@@ -117,8 +144,8 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize) {
         stiffness: 1,
         length: 0
     });
-    
-    var pyramid = Composites.pyramid(xx-width/2, 480, 4, 4, 0, 0, function(x, y) {
+
+    var pyramid = Composites.pyramid(xx-width/2, yy-height-(width/5), 4, 4, 0, 0, function(x, y) {
     return Bodies.rectangle(x, y, width/5, width/5, {
         label: 'enemy',
         density: 0.0001,
@@ -142,7 +169,13 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize) {
 
 class Car{
   constructor(x, y, width, height, wheelSize) {
-    this.composites = Composites.enemyCar(spawnX, spawnY, 120 * Common.random(carScaleMin, carScaleMax), 20 * Common.random(carScaleMin, carScaleMax), 12 * Common.random(carScaleMin, carScaleMax));
+    this.composites = Composites.enemyCar(
+        spawnX, 
+        spawnY, 
+        (canvasWidth/10) * Common.random(carScaleMin, carScaleMax), 
+        (canvasWidth/40) * Common.random(carScaleMin, carScaleMax), 
+        (canvasWidth/72) * Common.random(carScaleMin, carScaleMax)
+    );
     World.add(engine.world, this.composites);
   }
 }
@@ -153,22 +186,19 @@ var cars = [
 
 
 function advanceCar(car, index){
-  Body.setAngularVelocity(car.composites.bodies[1], -0.5);
+  Body.setAngularVelocity(car.composites.bodies[2], carSpeed);
 }
 
+Events.on(engine, 'beforeUpdate', function() {
+    cars.forEach(advanceCar);
+});
+
 Events.on(engine, 'afterUpdate', function() {
-    if (mouseConstraint.mouse.button === -1 && (rock.body.position.x > 131 || rock.body.position.y < 430)) {
-        rock = new Rock(towerX  , 450, 20, 12);
+    if (mouseConstraint.mouse.button === -1 && (rock.body.position.x > (towerX + (canvasWidth/64) ) || rock.body.position.y < (towerY - (canvasHeight/256)))) {
+        rock = new Rock(towerX  , towerY, 20, canvasWidth/128);
         World.add(engine.world, rock.body);
         elastic.bodyB = rock.body;
-        // setTimeout(function(){
-        //     World.remove(engine.world, [rocks[1].body]);
-        //     rocks.pop();
-        // },5000);
     }
-    
-    cars.forEach(advanceCar);
-
 });
 
 
@@ -197,15 +227,24 @@ var requestInterval = function (fn, delay) {
   return handle;
 };
 
-
-
 function addCars(){
-  //console.log('add car')
-  cars.push(new Car(spawnX, spawnY, 80, 10, 12))
-  // if (cars.length <= 5){
-  //   cars.push(new Car(spawnX, spawnY, 80, 10, 12));
-  // }
+  var allowspawn = true;
+  world.composites.forEach(function(car, index) { // check if any cars are within spawn area
+
+    if (car.bodies.length > 0){ // hack, see below in removeCar
+        if (car.bodies[0].position.x > spawnX - (canvasWidth/12)){ // selecting carBody body
+            allowspawn = false
+        }
+    }
+    
+  });
+  if (allowspawn){
+    cars.push(new Car(spawnX, spawnY, 80, 10, 12))
+  }
+  
+
 }
+
 requestInterval(addCars, spawnRate)
 
 function removeCar(bodyId){
@@ -216,11 +255,12 @@ function removeCar(bodyId){
           World.remove(engine.world, composite.constraints, true);
           World.remove(engine.world, composite.bodies, true);
           cars.splice(index, 1);
-          // setTimeout(function(){
-          //     World.remove(engine.world, composite.bodies, true);
-          //     cars.splice(index, 1);
-              
-          // },500);
+          setTimeout(function(){ // remove enemies slightly after car (might have to remove)
+                World.remove(engine.world, composite, true) 
+                
+            },250);
+          
+
         }
       });
       
@@ -232,7 +272,7 @@ function removeCar(bodyId){
 
 
 Matter.Events.on(engine, 'collisionStart', function(event) {
-  //console.log(cars.length)
+  //console.log(world.composites)
     let pairs = event.pairs;
     pairs.forEach(function(pair) {
       
@@ -251,18 +291,6 @@ Matter.Events.on(engine, 'collisionStart', function(event) {
       // enemy collides with ground or tower
       if ((pair.bodyA.label === 'ground' && pair.bodyB.label === 'enemy') ||
         (pair.bodyA.label === 'tower' && pair.bodyB.label === 'enemy')){
-        //   var forceMagnitude = 15.6;
-        //   console.log("go", pair.bodyB, forceMagnitude + Common.random() * forceMagnitude) * Common.choose([1, -1])
-        //   //pair.bodyB.isStatic = true;
-        
-
-        // Body.applyForce(pair.bodyB, {x: pair.bodyB.position.x, y: pair.bodyB.position.y}, {
-        //     x: (forceMagnitude + Common.random() * forceMagnitude) * Common.choose([1, -1]),
-        //     y: -forceMagnitude + Common.random() * -forceMagnitude
-        // });
-          
-          
-          
         setTimeout(function(){
             World.remove(engine.world, pair.bodyB, true);
         },250);
@@ -284,6 +312,9 @@ Matter.Events.on(engine, 'collisionStart', function(event) {
     });
 });
 
+
+
+
 // add mouse control
 var mouse = Mouse.create(render.canvas),
     mouseConstraint = MouseConstraint.create(engine, {
@@ -304,7 +335,16 @@ render.mouse = mouse;
 // fit the render viewport to the scene
 Render.lookAt(render, {
     min: { x: 0, y: 0 },
-    max: { x: 800, y: 600 }
+    max: { x: canvasWidth, y: canvasHeight }
 });
+
+
+
+
+
+// window.addEventListener("resize", function(){
+//     canvas.width = window.innerWidth;
+//     canvas.height = window.innerHeight;
+// });
 
  
