@@ -43,7 +43,7 @@ Runner.run(runner, engine);
 var spawnX = canvasWidth + 200,
     spawnY = ((canvasHeight/8) * 7) + 5,
     spawnRate = 2, //2000
-    carSpeed = -0.4, //02
+    carSpeed = -0.2, //02
     towerX = canvasWidth/8,
     towerY = (canvasHeight/4) * 3,
     carScaleMin = 0.4,
@@ -57,7 +57,7 @@ class Rock{
 }
   
 // create level
-var rock = new Rock(towerX, towerY, 20, canvasWidth/128);
+var rock = new Rock(towerX, towerY, 20, canvasWidth/64);
 var ground = Bodies.rectangle(0, (canvasHeight/16) * 15, canvasWidth*3, canvasHeight/16, { isStatic: true, label: 'ground' })
 var tower = Bodies.rectangle(towerX, towerY + (canvasHeight/8), 5, (canvasHeight/8), { isStatic: true, label: 'tower' })
 
@@ -186,7 +186,7 @@ var cars = [
 
 
 function advanceCar(car, index){
-  Body.setAngularVelocity(car.composites.bodies[2], carSpeed);
+  Body.setAngularVelocity(car.composites.bodies[1], carSpeed);
 }
 
 Events.on(engine, 'beforeUpdate', function() {
@@ -194,8 +194,8 @@ Events.on(engine, 'beforeUpdate', function() {
 });
 
 Events.on(engine, 'afterUpdate', function() {
-    if (mouseConstraint.mouse.button === -1 && (rock.body.position.x > (towerX + (canvasWidth/64) ) || rock.body.position.y < (towerY - (canvasHeight/256)))) {
-        rock = new Rock(towerX  , towerY, 20, canvasWidth/128);
+    if (mouseConstraint.mouse.button === -1 && (rock.body.position.x > (towerX + (canvasWidth/128) ) || rock.body.position.y < (towerY - (canvasHeight/128)))) {
+        rock = new Rock(towerX  , towerY, 20, canvasWidth/64);
         World.add(engine.world, rock.body);
         elastic.bodyB = rock.body;
     }
@@ -304,9 +304,8 @@ Matter.Events.on(engine, 'collisionStart', function(event) {
         ((pair.bodyA.label === 'ground' && pair.bodyB.label === 'carBody') ||
                 (pair.bodyA.label === 'carBody' && pair.bodyB.label === 'ground'))
         ){
-        //console.log(pair.bodyB.id)
-        //World.remove(engine.world, pair.bodyB, true);
-        removeCar(pair.bodyB.id);
+       
+            removeCar(pair.bodyB.id);
       }
      
     });
