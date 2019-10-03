@@ -40,8 +40,8 @@ canvasHeight = window.innerHeight;
 // Runner.run(runner, engine);
 
 
-var spawnX = canvasWidth - 200,
-    spawnY = ((canvasHeight/8) * 7) ,
+var spawnX = canvasWidth + 200,
+    spawnY = ((canvasHeight/8) * 7) -5,
     spawnRate = 2, //2000
     carSpeed = -0.5, //02
     towerX = canvasWidth/8,
@@ -95,7 +95,7 @@ function setup() {
   // create level
   
   rock = new Rock(towerX, towerY, 20, canvasWidth/64);
-  ground = new Boundary(0, (canvasHeight/16) * 15, canvasWidth*2, canvasHeight/16, { isStatic: true, label: 'ground'});
+  ground = new Boundary(0, (canvasHeight/16) * 15, canvasWidth*4, canvasHeight/16, { isStatic: true, label: 'ground'});
   tower = new Boundary(towerX, towerY + (canvasHeight/8), 5, (canvasHeight/8), { isStatic: true, label: 'tower'});
 
   anchor = { x: towerX, y: towerY };

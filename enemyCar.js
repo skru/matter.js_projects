@@ -109,7 +109,7 @@ class Car{
     translate(pos.x, pos.y);
     rotate(angle);
     rectMode(CENTER);
-    fill(0);
+    fill(127);
     rect(0, 0, this.width, this.height);
     pop();
     // front wheel
@@ -119,7 +119,7 @@ class Car{
     translate(pos.x, pos.y);
     rotate(angle);
     rectMode(CENTER);
-    fill(0);
+    fill(100);
     ellipse(0, 0, this.backWheelSize);
     pop();
     // back wheel
@@ -129,14 +129,22 @@ class Car{
     translate(pos.x, pos.y);
     rotate(angle);
     rectMode(CENTER);
-    fill(0);
+    fill(100);
     ellipse(0,0, this.wheelSize);
     pop();
 
-
-    // for (var i = 0; i < this.composites.composites.bodies.length; i++) {
-    //     console.log(this.composites.composites.bodies[i])
-    //   }
-
+    var enemies = this.composites.composites[0].bodies
+    for (var i = 0; i < enemies.length; i++) {
+        //console.log(this.composites.composites[0].bodies)
+        pos = enemies[i].position;
+        angle = enemies[i].angle;
+        push();
+        translate(pos.x, pos.y);
+        rotate(angle);
+        rectMode(CENTER);
+        fill(197);
+        rect(0,0, this.width/5, this.width/5);
+        pop();
+      }
   }
 }

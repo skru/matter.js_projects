@@ -21,7 +21,6 @@ class Rock{
   }
 
   remove(){
-
   	World.remove(engine.world, this.body)
     rocks.splice(rocks.indexOf(this), 1)
   }
