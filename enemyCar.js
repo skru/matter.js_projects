@@ -59,14 +59,21 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize, backWheelSize) 
         length: 0
     });
 
+    function boxes(x, y, width, height){
+        var box = Bodies.rectangle(x, y, width/5, width/5, {
+            label: 'enemy',
+            density: 0.0001,
+            restitution: 0,
+            friction: 1
+          
+          });
+        box.composite = car;
+        return box;
+
+    }
+
     var pyramid = Composites.pyramid(xx-width/2, yy-height-(width/5), 4, 4, 0, 0, function(x, y) {
-    return Bodies.rectangle(x, y, width/5, width/5, {
-        label: 'enemy',
-        density: 0.0001,
-        restitution: 0,
-        friction: 1
-      
-      });
+        return boxes(x, y, width, height);
     });
     
     Composite.addBody(car, body);
@@ -83,8 +90,8 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize, backWheelSize) 
 class Car{
   constructor(x, y, width, height, wheelSize, backWheelSize) {
     this.composites = Composites.enemyCar(
-        spawnX, 
-        spawnY, 
+        x, 
+        y, 
         width,
         height,
         wheelSize,
@@ -95,6 +102,8 @@ class Car{
     this.wheelSize = wheelSize*2;
     this.backWheelSize = backWheelSize*2;
     this.composites.container = this;
+    this.damage = 0;
+    this.good = probability(.1); //Common.choose([true, false])
     //console.log(wheelSize)
 
     World.add(engine.world, this.composites);
@@ -142,9 +151,30 @@ class Car{
         translate(pos.x, pos.y);
         rotate(angle);
         rectMode(CENTER);
-        fill(197);
+        if (this.good){
+            fill(color('#0f0'));
+        } else {
+            fill(color('#F20000'));
+        }
+        
         rect(0,0, this.width/5, this.width/5);
         pop();
       }
+  }
+
+  remove(){
+    if (this.damage >= 1){
+        World.remove(engine.world, this.composites);
+        for( var i = 0; i < cars.length; i++){ 
+           if ( cars[i].composites === this.composites) {
+             cars.splice(i, 1); 
+             i--;
+           }
+        }
+        //cars.splice(cars.indexOf(this), 1);
+    } else {
+        this.damage = this.damage + 1;
+    }
+    
   }
 }

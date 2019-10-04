@@ -1,7 +1,7 @@
 class Rock{
 
   constructor(x, y, sides, radius) {
-    this.body = Bodies.polygon(x, y, sides, radius, {density: 0.004, label: "rock"})
+    this.body = Bodies.polygon(x, y, sides, radius, {density: 0.5, label: "rock"})
     this.body.container = this;
     this.radius = radius;
     World.add(engine.world, this.body);
@@ -31,8 +31,7 @@ class Rock{
 		this.body.position.y < 0 || 
 		this.body.position.y > canvasHeight
 	){
-  		World.remove(engine.world, this.body);
-  		rocks.splice(rocks.indexOf(this), 1)
+  		this.remove()
   	};
   }
 }

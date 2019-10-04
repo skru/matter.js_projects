@@ -40,8 +40,9 @@ canvasHeight = window.innerHeight;
 // Runner.run(runner, engine);
 
 
-var spawnX = canvasWidth + 200,
+var spawnX = canvasWidth - 200,
     spawnY = ((canvasHeight/8) * 7) -5,
+    spawnY2 = (canvasHeight/16) * 11 -5,
     spawnRate = 2, //2000
     carSpeed = -0.5, //02
     towerX = canvasWidth/8,
@@ -49,7 +50,7 @@ var spawnX = canvasWidth + 200,
     carScaleMin = 0.4,
     carScaleMax = 0.8;
 
-
+var spawns = []
 
 var rock;
 var ground;
@@ -59,6 +60,7 @@ var cars = [];
 var rocks = [];
 var boundaries = [];
   
+var score = 0
 
 
 
@@ -84,18 +86,24 @@ var boundaries = [];
 //     canvas.height = window.innerHeight;
 // });
 
- 
+ function mousePressed() {
+  if (mouseX > 0 && mouseX < 100 && mouseY > 0 && mouseY < 100) {
+    let fs = fullscreen();
+    fullscreen(!fs);
+  }
+}
 
 function setup() {
   var canvas = createCanvas(canvasWidth, canvasHeight);
   engine = Engine.create();
   world = engine.world;
-  
+  spawns = [spawnY, spawnY2]
 
   // create level
-  
+
   rock = new Rock(towerX, towerY, 20, canvasWidth/64);
   ground = new Boundary(0, (canvasHeight/16) * 15, canvasWidth*4, canvasHeight/16, { isStatic: true, label: 'ground'});
+  ground2 = new Boundary(canvasWidth, (canvasHeight/16) * 12, canvasWidth*1, canvasHeight/64, { isStatic: true, label: 'ground'});
   tower = new Boundary(towerX, towerY + (canvasHeight/8), 5, (canvasHeight/8), { isStatic: true, label: 'tower'});
 
   anchor = { x: towerX, y: towerY };
@@ -122,12 +130,6 @@ function setup() {
   mouse.pixelRatio = pixelDensity(); // hdpi disply fix?
 
   World.add(engine.world, mouseConstraint);
-
-
-
-  // cars = [
-  //   new Car(spawnX, spawnY, 80, 10, 12)
-  // ]
 
 
   function advanceCar(car, index){
@@ -196,7 +198,7 @@ function setup() {
     if (allowspawn) {
       cars.push(new Car(
         spawnX, 
-        spawnY, 
+        spawns[Common.choose([0, 1])],
         (canvasWidth/10) * Common.random(carScaleMin, carScaleMax), 
         (canvasWidth/40) * Common.random(carScaleMin, carScaleMax), 
         (canvasWidth/72) * Common.random(carScaleMin, carScaleMax),
@@ -236,9 +238,19 @@ function setup() {
         }
 
         // enemy collides with ground or tower
-        if ((pair.bodyA.label === 'ground' && pair.bodyB.label === 'enemy') ||
-          (pair.bodyA.label === 'tower' && pair.bodyB.label === 'enemy')){
-
+        if (pair.bodyA.label === 'ground' && pair.bodyB.label === 'enemy'){
+          setTimeout(function(){
+              World.remove(engine.world, pair.bodyB, true);
+          },250);
+        } 
+        if (pair.bodyA.label === 'tower' && pair.bodyB.label === 'enemy'){
+          //console.log(pair.bodyB)
+          if (pair.bodyB.composite.container.good){
+            score += 1;
+          } else {
+            score -= 1;
+          }
+          
           setTimeout(function(){
               World.remove(engine.world, pair.bodyB, true);
           },250);
@@ -253,7 +265,8 @@ function setup() {
                   (pair.bodyA.label === 'carBody' && pair.bodyB.label === 'ground'))
           ){
               //console.log("car collide", pair.bodyB)
-              removeCar(pair.bodyB);
+              //console.log(pair.bodyB.composite.container);
+              pair.bodyB.composite.container.remove()
         }
        
       });
@@ -265,11 +278,15 @@ function setup() {
 // }
 
 function draw() {
-//console.log(rocks)
+//console.log(cars)
+
   background(255);
   Engine.update(engine);
   //console.log(rock)
   //rock.show();
+  textSize(32);
+  var scoreText = "SCORE: " + score;
+  text(scoreText, 10, 100);
 
   for (var i = 0; i < rocks.length; i++) {
     if (!rocks[i].isOffScreen()){
@@ -286,6 +303,7 @@ function draw() {
     //console.log(cars[i])
     // if (cars[i].bodies.length > 0){ // hack, see below in removeCar
        cars[i].show();
+       //console.log(cars[i].damage)
     // }
   }
 
@@ -293,3 +311,8 @@ function draw() {
 
 
 }
+
+// https://stackoverflow.com/questions/26271868/is-there-a-simpler-way-to-implement-a-probability-function-in-javascript?lq=1
+var probability = function(n) {
+     return !!n && Math.random() <= n;
+};
