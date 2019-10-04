@@ -11,7 +11,7 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize, backWheelSize) 
         body = Bodies.rectangle(xx, yy, width, height, {
             collisionFilter: {
                 group: group,
-                //category: collisionCategory
+                mask: defaultCategory
             },
             // chamfer: {
             //     radius: height * 0.2
@@ -28,7 +28,7 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize, backWheelSize) 
     var wheelA = Bodies.circle(xx + wheelAOffset, yy + wheelYOffset, backWheelSize, {
         collisionFilter: {
             group: group,
-            //category: collisionCategory
+            mask: defaultCategory
         },
         friction: 1,
         restitution: 0.001,
@@ -37,7 +37,7 @@ Composites.enemyCar = function(xx, yy, width, height, wheelSize, backWheelSize) 
     var wheelB = Bodies.circle(xx + wheelBOffset, yy + wheelYOffset, wheelSize, {
         collisionFilter: {
             group: group,
-            //category: collisionCategory
+            mask: defaultCategory
         },
         friction: 1,
         restitution: 0.001

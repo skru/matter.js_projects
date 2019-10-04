@@ -4,6 +4,7 @@ class Rock{
     this.body = Bodies.polygon(x, y, sides, radius, {density: 0.5, label: "rock"})
     this.body.container = this;
     this.radius = radius;
+    //this.body.collisionFilter = {mask: defaultCategory};
     World.add(engine.world, this.body);
     rocks.push(this);
   }

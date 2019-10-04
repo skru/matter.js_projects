@@ -40,7 +40,7 @@ canvasHeight = window.innerHeight;
 // Runner.run(runner, engine);
 
 
-var spawnX = canvasWidth + 200,
+var spawnX = canvasWidth - 200,
     spawnY = ((canvasHeight/8) * 7) -5,
     spawnY2 = (canvasHeight/16) * 11 -5,
     spawnRate = 2, //2000
@@ -60,9 +60,13 @@ var cars = [];
 var rocks = [];
 var boundaries = [];
   
-var score = 0
+var score = 0;
+var health = 100;
 
-
+var defaultCategory = 0x0001,
+        redCategory = 0x0002,
+        greenCategory = 0x0004,
+        blueCategory = 0x0008;
 
 
 
@@ -104,6 +108,7 @@ function setup() {
   rock = new Rock(towerX, towerY, 20, canvasWidth/64);
   ground = new Boundary(0, (canvasHeight/16) * 15, canvasWidth*4, canvasHeight/16, { isStatic: true, label: 'ground'});
   ground2 = new Boundary(canvasWidth, (canvasHeight/16) * 12, canvasWidth*1, canvasHeight/64, { isStatic: true, label: 'ground'});
+  ground3 = new Boundary(canvasWidth/2, (canvasHeight/16) * 12, canvasWidth/28, canvasHeight/64, { angle: Math.PI/-1.1, isStatic: true, label: 'ground'});
   tower = new Boundary(towerX, towerY + (canvasHeight/8), 5, (canvasHeight/8), { isStatic: true, label: 'tower'});
 
   anchor = { x: towerX, y: towerY };
@@ -123,7 +128,7 @@ function setup() {
           constraint: {
               stiffness: 0.2,
               render: {
-                  visible: true
+                  visible: false
               }
           }
       });
@@ -136,15 +141,11 @@ function setup() {
     Body.setAngularVelocity(car.composites.bodies[1], carSpeed);
   }
 
-  Events.on(engine, 'beforeUpdate', function() {
-      cars.forEach(advanceCar);
-  });
+  // Events.on(engine, 'beforeUpdate', function() {
+  //     cars.forEach(advanceCar);
+  // });
 
   Events.on(engine, 'afterUpdate', function() {
-    //console.log("mouse")
-    // if (mouseConstraint.mouse.button === -1){
-    //   console.log('pressee')
-    // }
       if (mouseConstraint.mouse.button === -1 && 
         (rock.body.position.x > (towerX + 5 ) )) {
           
@@ -156,6 +157,8 @@ function setup() {
           // },50);
           
       }
+
+      cars.forEach(advanceCar);
   });
 
 
@@ -189,7 +192,7 @@ function setup() {
     world.composites.forEach(function(car, index) { // check if any cars are within spawn area
 
       if (car.bodies.length > 0){ // hack, see below in removeCar
-          if (car.bodies[0].position.x > spawnX - (canvasWidth/12)){ // selecting carBody body
+          if (car.bodies[0].position.x > spawnX - (canvasWidth/8)){ // selecting carBody body
               allowspawn = false
           }
       }
@@ -244,12 +247,13 @@ function setup() {
           },250);
         } 
         if (pair.bodyA.label === 'tower' && pair.bodyB.label === 'enemy'){
-          //console.log(pair.bodyB)
+          
           if (pair.bodyB.composite.container.good){
-            score += 1;
+            health += 10;
           } else {
-            score -= 1;
+            health -= 2;
           }
+
           
           setTimeout(function(){
               World.remove(engine.world, pair.bodyB, true);
@@ -258,14 +262,15 @@ function setup() {
         
         // car collides with tower
         if (
-          ((pair.bodyA.label === 'tower' && pair.bodyB.label === 'carBody') ||
-                  (pair.bodyA.label === 'carBody' && pair.bodyB.label === 'tower'))
-          ||
-          ((pair.bodyA.label === 'ground' && pair.bodyB.label === 'carBody') ||
+          (pair.bodyA.label === 'tower' && pair.bodyB.label === 'carBody') ||
+                  (pair.bodyA.label === 'carBody' && pair.bodyB.label === 'tower')){
+              health -= 2;
+              pair.bodyB.composite.container.remove()
+          }
+          
+          if ((pair.bodyA.label === 'ground' && pair.bodyB.label === 'carBody') ||
                   (pair.bodyA.label === 'carBody' && pair.bodyB.label === 'ground'))
-          ){
-              //console.log("car collide", pair.bodyB)
-              //console.log(pair.bodyB.composite.container);
+          {
               pair.bodyB.composite.container.remove()
         }
        
@@ -276,17 +281,39 @@ function setup() {
 // function mousePressed() {
 //   boxes.push(new Box(mouseX, mouseY, random(10, 40), random(10, 40)));
 // }
+function gameOver(){
+  health = 100;
+  score = 0;
+  rocks = [];
+  cars = [];
+  boundaries = [];
+  World.clear(engine.world);
+  Engine.clear(engine);
+  setup();
+}
 
 function draw() {
 //console.log(cars)
-
+  
   background(255);
   Engine.update(engine);
   //console.log(rock)
   //rock.show();
   textSize(16);
+  score+=10;
   var scoreText = "SCORE: " + score;
   text(scoreText, 10, 20);
+
+  if (health > 100){
+    health = 100;
+  }
+
+  if (health <= 0){
+    gameOver();
+  }
+
+  var healthText = "HEALTH: " + health + "%";
+  text(healthText, 10, 40);
 
   for (var i = 0; i < rocks.length; i++) {
     if (!rocks[i].isOffScreen()){
