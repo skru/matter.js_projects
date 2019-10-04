@@ -40,7 +40,7 @@ canvasHeight = window.innerHeight;
 // Runner.run(runner, engine);
 
 
-var spawnX = canvasWidth - 200,
+var spawnX = canvasWidth + 200,
     spawnY = ((canvasHeight/8) * 7) -5,
     spawnY2 = (canvasHeight/16) * 11 -5,
     spawnRate = 2, //2000
@@ -87,7 +87,7 @@ var score = 0
 // });
 
  function mousePressed() {
-  if (mouseX > 0 && mouseX < 100 && mouseY > 0 && mouseY < 100) {
+  if (mouseX > 10 && mouseX < 100 && mouseY > 10 && mouseY < 100) {
     let fs = fullscreen();
     fullscreen(!fs);
   }
@@ -284,9 +284,9 @@ function draw() {
   Engine.update(engine);
   //console.log(rock)
   //rock.show();
-  textSize(32);
+  textSize(16);
   var scoreText = "SCORE: " + score;
-  text(scoreText, 10, 100);
+  text(scoreText, 10, 20);
 
   for (var i = 0; i < rocks.length; i++) {
     if (!rocks[i].isOffScreen()){
